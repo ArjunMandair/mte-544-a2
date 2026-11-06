@@ -1,0 +1,109 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, bm}
+\usepackage{graphicx}
+\usepackage{caption, subcaption}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+
+\graphicspath{{figures/}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{MTE 544 -- Assignment 2}
+\rhead{Arjun Mandair}
+\cfoot{\thepage}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  numbers=left,
+  numberstyle=\tiny,
+  breaklines=true,
+  frame=single
+}
+
+% Handy shortcuts
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+
+\title{MTE 544 -- Autonomous Mobile Robots\\Assignment 2}
+\author{Arjun Mandair \\ Student ID: \texttt{XXXXXXXX}}
+\date{Due November 13, 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+% =====================================================================
+\newpage
+\section{RANSAC with Ellipse I (18 pts)}
+
+\subsection*{1(a) Minimum number of points and construction method [10 pts]}
+% TODO
+
+\subsection*{1(b) Ellipse fit to the given dataset [8 pts]}
+% Points: (2.92,-6.01), (3.40,-7.20), (4.99,-7.84), (5.48,-7.04), (4.20,-5.91)
+% Report Q, b, A, B, C, D, E
+% TODO
+
+% =====================================================================
+\newpage
+\section{RANSAC with Ellipse II (30 pts)}
+
+\subsection*{2(a) \texttt{fit\_ellipse\_subset} [8 pts]}
+% TODO
+
+\subsection*{2(b) \texttt{ransac\_ellipse} [12 pts] \quad (max 150 words)}
+% TODO
+
+\subsection*{2(c) Effect of dataset size, iterations and threshold [10 pts] \quad (max 100 words)}
+% TODO -- include plots (axes labelled with units, captions)
+% \begin{figure}[h]
+%   \centering
+%   \includegraphics[width=0.7\linewidth]{q2c_example.png}
+%   \caption{...}
+%   \label{fig:q2c}
+% \end{figure}
+
+% =====================================================================
+\newpage
+\section{Bayesian Filter for Tracking Moo-Deng's Behavior I (32 pts)}
+
+\subsection*{3(a) Probability of sequence (2,3,3,1) [4 pts] \quad (max 50 words)}
+% TODO
+
+\subsection*{3(b) Transition matrix $\mat{A}$ [5 pts] \quad (max 50 words)}
+% TODO
+
+\subsection*{3(c) Stationary probabilities [8 pts]}
+% TODO
+
+\subsection*{3(d) Measurement matrix $\mat{C}$ [5 pts] \quad (max 50 words)}
+% TODO
+
+\subsection*{3(e) Bayesian filter state estimator [10 pts]}
+% TODO
+
+% =====================================================================
+\newpage
+\section{Bayesian Filter for Tracking Moo-Deng's Behavior II (20 pts)}
+
+\subsection*{4(a) \texttt{moodeng\_behavior\_update} [6 pts] \quad (max 50 words)}
+% TODO
+
+\subsection*{4(b) \texttt{sensor\_measurement} [6 pts]}
+% TODO
+
+\subsection*{4(c) \texttt{sim\_moodeng} state estimator [8 pts]}
+% TODO -- include plots (axes labelled with units, captions)
+
+\end{document}
