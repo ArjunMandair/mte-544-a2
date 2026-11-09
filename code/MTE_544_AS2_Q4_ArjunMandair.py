@@ -15,14 +15,16 @@ import numpy as np
 def decode_measurement(measurements):
     readings = []
     for measurement in measurements:
-        readings.append(np.argmax(measurement) + 1)  # +1 for 1-based indexing
+        readings.append(int(np.argmax(measurement)) + 1)  # +1 for 1-based indexing
     return readings
 
 def moodeng_behavior_update(state, A):
     # Given the current state, and the transition matrix A, 
     # randomly return the next state of Moo-Deng based on A
     ##### ADD your code here : #####
-    ...
+    # Column (state-1) of A = probabilities of the next zone given the current zone.
+    # States are 1-based (1=F, 2=R, 3=P), numpy indices are 0-based.
+    next_state = int(np.random.choice([1, 2, 3], p=A[:, state - 1]))
     ##### END #####
     return next_state
 def sensor_measurement(state, C):
@@ -33,7 +35,9 @@ def sensor_measurement(state, C):
     # R -> np.array([0,1,0])
     # P -> np.array([0,0,1])
     ##### ADD your code here : #####
-    ...
+    # Column (state-1) of C = probabilities of each displayed zone given the true zone.
+    reading = np.random.choice([0, 1, 2], p=C[:, state - 1])
+    measurement = np.eye(3, dtype=int)[reading]      # one-hot: F, R or P
     ##### END #####
     return measurement
 
@@ -44,8 +48,14 @@ def sim_moodeng(initial_state=1,iteration = 20):
     belief = np.array([1/3, 1/3, 1/3])  # Initial belief for the Bayesian filter
     
     ##### ADD your code here : #####
-    A = ...
-    C = ...
+    # A[i, j] = p(next = i+1 | current = j+1)   (columns sum to 1)
+    A = np.array([[0.6, 0.2, 0.2],
+                  [0.4, 0.4, 0.1],
+                  [0.0, 0.4, 0.7]])
+    # C[i, j] = p(display i+1 | true zone j+1)   (columns sum to 1)
+    C = np.array([[0.80, 0.20, 0.05],
+                  [0.10, 0.70, 0.10],
+                  [0.10, 0.10, 0.85]])
     ##### END #####
 
     states = []
@@ -56,10 +66,17 @@ def sim_moodeng(initial_state=1,iteration = 20):
     for i in range(iteration):
                
         ##### ADD your code here : #####
-        next_state = 
-        measurement = 
-        updated_belief =
-        estimated_state =
+        # Simulate the true world
+        next_state = moodeng_behavior_update(state, A)      # Moo-Deng moves
+        measurement = sensor_measurement(next_state, C)     # noisy sensor reading
+        # Bayes filter
+        predicted = A @ belief                              # prediction: x_bar = A x_{k-1}
+        unnormalized = (C.T @ measurement) * predicted      # correction: likelihood * prediction
+        updated_belief = unnormalized / unnormalized.sum()  # normalise (eta)
+        estimated_state = int(np.argmax(updated_belief)) + 1  # most likely zone, 1-based
+        # carry forward to the next step
+        belief = updated_belief
+        state = next_state
 
         ##### END #####
         states.append(next_state)

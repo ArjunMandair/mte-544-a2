@@ -38,6 +38,8 @@ files in this folder and link them here).
 | 2026-11-09 | Claude Code | Q3c | I wrote the derivation. Claude checked it with a throwaway exact-fraction and eigenvector calculation (not in this repo) and typeset it into `report/main.tex` as written. | Session 50aefb99 |
 | 2026-11-09 | Claude Code | Q3d | I wrote the matrix and explanation. Claude checked each entry against the handout, counted the words, and typeset it into `report/main.tex` as written. | Session 50aefb99 |
 | 2026-11-09 | Claude Code | Q3e | I wrote the filter derivation and example. Claude checked the formulas and example with a throwaway calculation (not in this repo) and typeset it into `report/main.tex` as written. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q4 | Claude ran my Q4 script and checked it with throwaway scripts (not in this repo): sampling frequencies against A and C, a separate filter recursion, and accuracy over many runs. At my request, Claude wrote the 4(b) sentence and the 4(c) text and results table from a run (seed 0 set from outside the script) in `report/main.tex`, with a TODO for my 4(a) explanation. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q4a | I wrote the 4(a) explanation. Claude counted the words, tested the long-run frequency claim with a throwaway run (not in this repo), and typeset it into `report/main.tex` as written. | Session 50aefb99 |
 
 **Transcript:** "Session 50aefb99" is Claude Code session `50aefb99-4011-4854-99e8-9e4363846115`, stored locally at
 `C:\Users\arjun\.claude\projects\c--Codes-mte-544-a2\50aefb99-4011-4854-99e8-9e4363846115.jsonl`.
