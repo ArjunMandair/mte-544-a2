@@ -54,7 +54,23 @@ def fit_ellipse_subset(points):
     
 
     ##### ADD your code here : #####
-    ...
+    # Solve for A-E
+    M = np.array([[x**2, 2*x*y, y**2, -2*x, -2*y] for x, y in points])
+    A, B, C, D, E = np.linalg.solve(M, -np.ones(len(points)))
+
+    # Convert A-E to Q and b formulas
+    N = np.array([[A, B], [B, C]])
+    DE = np.array([D, E])
+    b = np.linalg.solve(N, DE)
+    den = DE @ np.linalg.solve(N, DE) - 1
+    
+    # alpha undefened if denominator is too small
+    if abs(den) < 1e-12:
+        raise np.linalg.LinAlgError('alpha undefined')
+    
+    # else return Q and b
+    alpha = 1 / den
+    Q = alpha * N
     ##### END #####
     return Q, b
 
@@ -65,7 +81,34 @@ def ransac_ellipse(data, num_iterations=1000, threshold=0.2):
     # Hint: in some case, the Q matrix might not be positive defintie, use is_positive_definite to check.
 
     ##### ADD your code here : #####
-    ...
+    best_count = -1
+    Q, b = None, None
+    n = data.shape[0]
+    lo, hi = data.min(axis=0), data.max(axis=0)
+    span = (hi - lo).max()
+
+    for _ in range(num_iterations):
+        # 1. pick 5 random points and fit
+        idx = np.random.choice(n, 5, replace=False)
+        try:
+            Q_try, b_try = fit_ellipse_subset(data[idx])
+        except np.linalg.LinAlgError:
+            continue
+        # 2. skip non-ellipses and giant ellipses
+        if not is_positive_definite(Q_try):
+            continue
+        semi_axes = 1 / np.sqrt(np.linalg.eigvalsh(Q_try))
+        if np.any(b_try < lo) or np.any(b_try > hi) or semi_axes.max() > span:
+            continue
+        # 3. inlier test: | sqrt((p-b)^T Q (p-b)) - 1 | <= threshold
+        d = data - b_try
+        dist = np.abs(np.sqrt(np.einsum('ij,jk,ik->i', d, Q_try, d)) - 1)
+        mask = dist <= threshold
+        # 4. keep the best
+        if mask.sum() > best_count:
+            best_count = mask.sum()
+            Q, b = Q_try, b_try
+            inliers = data[mask]
     ##### END #####
     return Q,b,inliers
 

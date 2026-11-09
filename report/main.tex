@@ -8,7 +8,7 @@
 \usepackage{enumitem}
 \usepackage{listings}
 \usepackage{xcolor}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{fancyhdr}
 
 \graphicspath{{figures/}}
@@ -88,7 +88,7 @@ Solving in polynomial form is useful because the unknowns appear linearly, so fi
     \item $\mat{N}$ is singular (the parabola case, $AC - B^2 = 0$): $\mat{N}^{-1}$ does not exist, so reject the sample.
     \item $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$: $\alpha$ is undefined (division by zero), so reject the sample.
 \end{itemize}
-The checks in the last two bullets run before step 4, so they need their own guards. In code, \texttt{fit\_ellipse\_subset} should return nothing for these cases so that RANSAC skips that sample.
+The checks in the last two bullets run before step 4, so they need their own guards. In code, \texttt{fit\_ellipse\_subset} raises \texttt{LinAlgError} for these cases, and \texttt{ransac\_ellipse} catches it and skips that sample.
 
 \subsection*{1(b) Ellipse fit to the given dataset [8 pts]}
 
@@ -135,13 +135,69 @@ The eigenvalues of $\mat{Q}$ are $0.44217849$ and $1.56737653$. Both are positiv
 \section{RANSAC with Ellipse II (30 pts)}
 
 \subsection*{2(a) \texttt{fit\_ellipse\_subset} [8 pts]}
-% TODO
+
+The Q2 script implements \texttt{fit\_ellipse\_subset} using the 5-point method from 1(a). Applied to the five points from 1(b), it gives
+\begin{equation*}
+    \mat{Q} = \begin{bmatrix} 0.75282437 & 0.50302811 \\ 0.50302811 & 1.25673065 \end{bmatrix},
+    \qquad
+    \vect{b} = \begin{bmatrix} 4.19868909 \\ -6.80150371 \end{bmatrix},
+\end{equation*}
+which matches 1(b), and all five points give $(\vect{p}_i - \vect{b})^\top\mat{Q}(\vect{p}_i - \vect{b}) = 1$.
 
 \subsection*{2(b) \texttt{ransac\_ellipse} [12 pts] \quad (max 150 words)}
-% TODO
+
+For \texttt{num\_iterations} rounds:
+\begin{enumerate}
+    \item Sample 5 distinct random points, the minimum that defines an ellipse (Q1a).
+    \item Fit $\mat{Q}$ and $\vect{b}$ with \texttt{fit\_ellipse\_subset}. If $\mat{M}$ or $\mat{N}$ is singular or $\alpha$ is undefined, the fit raises an error and the sample is skipped.
+    \item Reject the fit if $\mat{Q}$ is not positive definite, since it is then a hyperbola or degenerate conic, not an ellipse.
+    \item Reject the fit if its centre $\vect{b}$ lies outside the data's bounding box or its largest semi-axis ($1/\sqrt{\lambda}$) exceeds the data's span. The handout's inlier test is relative to ellipse size, so very large ellipses would otherwise count most points as inliers and win.
+    \item Mark point $\vect{p}_i$ as an inlier if $\left|\sqrt{(\vect{p}_i - \vect{b})^\top\mat{Q}(\vect{p}_i - \vect{b})} - 1\right| \leq \varepsilon$.
+    \item If this model has more inliers than the best so far, store its $\mat{Q}$, $\vect{b}$ and inliers.
+\end{enumerate}
+Return the model with the most inliers (maximum consensus).
+
+\subsubsection*{Result}
+One run with the template's default settings ($N = 500$ points, 1000 iterations, $\varepsilon = 0.2$, random seed 0) gave 374 inliers out of 500 (74.8\%), with
+\begin{equation*}
+    \mat{Q} = \begin{bmatrix} 0.00512310 & -0.00252617 \\ -0.00252617 & 0.01378752 \end{bmatrix},
+    \qquad
+    \vect{b} = \begin{bmatrix} 3.35847123 \\ -2.61511590 \end{bmatrix}.
+\end{equation*}
+The eigenvalues of $\mat{Q}$ are $0.00444037$ and $0.01447024$, so $\mat{Q}$ is positive definite. The semi-axes ($1/\sqrt{\text{eigenvalue}}$) are $15.0069$ and $8.3131$.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{q2_ransac_ellipse.png}
+    \caption{RANSAC result for $N = 500$ points, 1000 iterations and $\varepsilon = 0.2$ (seed 0), showing the inliers, outliers, fitted ellipse, inlier band and centre $\vect{b}$. Axes are unitless. The ellipse is drawn directly from the fitted $\mat{Q}$ and $\vect{b}$ by a separate helper script.}
+    \label{fig:q2b}
+\end{figure}
 
 \subsection*{2(c) Effect of dataset size, iterations and threshold [10 pts] \quad (max 100 words)}
-% TODO -- include plots (axes labelled with units, captions)
+
+\begin{table}[h!]
+    \centering
+    \footnotesize
+    \input{q2c_table.tex}
+    \caption{Results for each setting over 10 seeds, as mean $\pm$ standard deviation across the runs that returned a model. ``Runs'' is the number of seeds that returned a model. $b_x$ and $b_y$ are the components of the centre, ``Major'' and ``Minor'' are the semi-axes, and all are unitless.}
+    \label{tab:q2c}
+\end{table}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\linewidth]{q2c_extremes.png}
+    \caption{Fitted ellipse at the smallest and largest value of each setting (seed 0), with the other two settings at their baseline values. Axes are unitless.}
+    \label{fig:q2c}
+\end{figure}
+
+Table~\ref{tab:q2c} summarises ten seeds per setting, and Figure~\ref{fig:q2c} shows each setting's extremes, with the others at baseline.
+
+\textbf{Points ($N$):} the inlier percentage stays roughly steady, and the centre stabilises up to $N = 500$; beyond that, gains are small while runtime grows.
+
+\textbf{Iterations:} too few often miss an all-inlier sample, so fits vary between seeds. Beyond about 1000, results stop improving and only runtime grows.
+
+\textbf{Threshold $\varepsilon$:} small $\varepsilon$ rejects noisy true points, giving few inliers and an unstable fit. Large $\varepsilon$ accepts outliers, inflating the inlier count and biasing the ellipse. $\varepsilon \approx 0.2$ balanced both.
+
 % \begin{figure}[h]
 %   \centering
 %   \includegraphics[width=0.7\linewidth]{q2c_example.png}
