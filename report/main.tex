@@ -36,7 +36,7 @@
 \newcommand{\mat}[1]{\mathbf{#1}}
 
 \title{MTE 544 -- Autonomous Mobile Robots\\Assignment 2}
-\author{Arjun Mandair \\ Student ID: \texttt{XXXXXXXX}}
+\author{Arjun Mandair \\ Student ID: \texttt{21028006}}
 \date{Due November 13, 2026}
 
 \begin{document}
@@ -44,19 +44,94 @@
 \thispagestyle{fancy}
 
 % =====================================================================
-\newpage
+\clearpage
 \section{RANSAC with Ellipse I (18 pts)}
 
 \subsection*{1(a) Minimum number of points and construction method [10 pts]}
-% TODO
+
+The ellipse is written as
+\begin{equation*}
+    Ax^2 + 2Bxy + Cy^2 - 2Dx - 2Ey + 1 = 0.
+\end{equation*}
+A conic has 6 coefficients but only 5 degrees of freedom, because multiplying the whole equation by any nonzero number gives the same curve. Fixing the constant term at 1 removes that scaling, which leaves 5 unknowns, $\bm{\theta} = [A, B, C, D, E]^\top$. The matrix form gives the same count: $\mat{Q}$ is symmetric, so it has 3 independent entries, and $\vect{b}$ has 2, for 5 in total.
+
+Substituting a data point $\vect{p}_i = (x_i, y_i)$ turns every $x$ and $y$ into a known number. Moving the 1 to the right-hand side then gives one equation that is linear in $\bm{\theta}$:
+\begin{equation*}
+    x_i^2\,A + 2x_iy_i\,B + y_i^2\,C - 2x_i\,D - 2y_i\,E = -1.
+\end{equation*}
+Five points give five such equations. Stacking them gives
+\begin{equation*}
+    \mat{M}\bm{\theta} = -\vect{1}, \qquad -\vect{1} = [-1, -1, -1, -1, -1]^\top \in \mathbb{R}^5,
+\end{equation*}
+where row $i$ of $\mat{M}$ is $[x_i^2,\ 2x_iy_i,\ y_i^2,\ -2x_i,\ -2y_i]$.
+
+\begin{itemize}
+    \item \textbf{Fewer than 5 points:} the system is underdetermined, so it has infinitely many solutions (conics), or none.
+    \item \textbf{Exactly 5 points:} this is the minimum. There is a unique solution $\bm{\theta} = \mat{M}^{-1}(-\vect{1})$ whenever $\mat{M}$ is invertible (rank 5).
+\end{itemize}
+
+Solving in polynomial form is useful because the unknowns appear linearly, so fitting reduces to solving a linear system. The $(\mat{Q}, \vect{b})$ form is easier to interpret ($\vect{b}$ is the centre, $\mat{Q}$ sets the size and orientation), but it isn't linear in its unknowns.
+
+\subsubsection*{Method to construct the ellipse}
+\begin{enumerate}
+    \item Build $\mat{M}$ from the 5 points and solve $\mat{M}\bm{\theta} = -\vect{1}$ for $A, B, C, D, E$.
+    \item Let $\mat{N} = \begin{bmatrix} A & B \\ B & C \end{bmatrix}$ and $\vect{d} = [D, E]^\top$. The handout gives $\mat{Q} = \alpha\mat{N}$ and $\mat{Q}\vect{b} = \alpha\vect{d}$. Substituting the first relation into the second gives $\alpha\mat{N}\vect{b} = \alpha\vect{d}$, so $\vect{b} = \mat{N}^{-1}\vect{d}$.
+    \item Compute $\alpha = 1 / (\vect{d}^\top\mat{N}^{-1}\vect{d} - 1)$, then $\mat{Q} = \alpha\mat{N}$.
+    \item Check that $\mat{Q}$ is positive definite (both eigenvalues $> 0$). If it is, the result is an ellipse. If not, it is a hyperbola or a degenerate conic, and the 5 points are rejected.
+\end{enumerate}
+
+\subsubsection*{Assumptions and failure cases}
+\begin{itemize}
+    \item \textbf{The ellipse does not pass through the origin.} Fixing the constant at 1 requires the true constant to be nonzero. A conic through $(0, 0)$ has a constant term of 0, so it cannot be scaled to 1. In that case $\mat{M}$ is singular (rank 4) and the method fails.
+    \item \textbf{No 4 of the 5 points are collinear.} Four points on one line make $\mat{M}$ singular, because infinitely many line-pair conics fit them.
+    \item 3 collinear points (with no 4 collinear) still leave $\mat{M}$ invertible, but the unique solution is a degenerate pair of lines. A degenerate conic satisfies $\det(\mat{N})\,(1 - \vect{d}^\top\mat{N}^{-1}\vect{d}) = 0$, so for intersecting lines ($\mat{N}$ invertible) $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$ and $\alpha$ is undefined: the sample is rejected at step 3. For parallel lines, $\mat{N}$ is singular (next case).
+    \item $\mat{N}$ is singular (the parabola case, $AC - B^2 = 0$): $\mat{N}^{-1}$ does not exist, so reject the sample.
+    \item $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$: $\alpha$ is undefined (division by zero), so reject the sample.
+\end{itemize}
+The checks in the last two bullets run before step 4, so they need their own guards. In code, \texttt{fit\_ellipse\_subset} should return nothing for these cases so that RANSAC skips that sample.
 
 \subsection*{1(b) Ellipse fit to the given dataset [8 pts]}
-% Points: (2.92,-6.01), (3.40,-7.20), (4.99,-7.84), (5.48,-7.04), (4.20,-5.91)
-% Report Q, b, A, B, C, D, E
-% TODO
+
+The method from 1(a) was applied in Python (\texttt{MTE\_544\_AS2\_Q1\_ArjunMandair.py}) to the points
+\begin{equation*}
+    (2.92, -6.01), \quad (3.40, -7.20), \quad (4.99, -7.84), \quad (5.48, -7.04), \quad (4.20, -5.91).
+\end{equation*}
+The resulting $\mat{M}$ has rank 5, so the solution is unique. Values are rounded to 8 decimal places for display. The handout does not specify units for the data, so all coordinates are treated as unitless.
+
+\begin{center}
+\begin{tabular}{ll}
+    \toprule
+    Parameter & Value \\
+    \midrule
+    $A$ & $0.01806282$ \\
+    $B$ & $0.01206936$ \\
+    $C$ & $0.03015325$ \\
+    $D$ & $-0.00624961$ \\
+    $E$ & $-0.15441197$ \\
+    $\vect{d}^\top\mat{N}^{-1}\vect{d}$ & $1.02399341$ \\
+    $\alpha$ & $41.67811288$ \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{equation*}
+    \mat{Q} = \begin{bmatrix} 0.75282437 & 0.50302811 \\ 0.50302811 & 1.25673065 \end{bmatrix},
+    \qquad
+    \vect{b} = \begin{bmatrix} 4.19868909 \\ -6.80150371 \end{bmatrix}.
+\end{equation*}
+
+The eigenvalues of $\mat{Q}$ are $0.44217849$ and $1.56737653$. Both are positive, so $\mat{Q}$ is positive definite and the conic is an ellipse. As a check, all five points give $(\vect{p}_i - \vect{b})^\top\mat{Q}(\vect{p}_i - \vect{b}) = 1.000000$, and $\mat{Q}\vect{b} = \alpha\vect{d} = [-0.26047206,\ -6.43559953]^\top$.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\linewidth]{q1b_ellipse.png}
+    \caption{Ellipse fitted through the five given points, with centre $\vect{b}$. The handout does not specify units for the data, so the axes are unitless.}
+    \label{fig:q1b}
+\end{figure}
+
 
 % =====================================================================
-\newpage
+\clearpage
 \section{RANSAC with Ellipse II (30 pts)}
 
 \subsection*{2(a) \texttt{fit\_ellipse\_subset} [8 pts]}
@@ -75,7 +150,7 @@
 % \end{figure}
 
 % =====================================================================
-\newpage
+\clearpage
 \section{Bayesian Filter for Tracking Moo-Deng's Behavior I (32 pts)}
 
 \subsection*{3(a) Probability of sequence (2,3,3,1) [4 pts] \quad (max 50 words)}
@@ -94,7 +169,7 @@
 % TODO
 
 % =====================================================================
-\newpage
+\clearpage
 \section{Bayesian Filter for Tracking Moo-Deng's Behavior II (20 pts)}
 
 \subsection*{4(a) \texttt{moodeng\_behavior\_update} [6 pts] \quad (max 50 words)}
