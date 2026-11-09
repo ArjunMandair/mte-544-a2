@@ -33,6 +33,11 @@ files in this folder and link them here).
 | 2026-11-09 | Claude Code | Q2c | I wrote the 2(c) comments with placeholders for the numbers. Claude filled the placeholders from the results table, typeset the comments into `report/main.tex`, counted the words and checked each claim against the table. | Session 50aefb99 |
 | 2026-11-09 | Claude Code | Q2c | At my request, Claude reworded the first clause of my N comment to match the table (inlier percentage roughly steady, centre stabilises up to N = 500). | Session 50aefb99 |
 | 2026-11-09 | Claude Code | Q2c | At my request, Claude rewrote my 2(c) comments to fit 100 words: it kept my points, removed the numbers, added a sentence introducing Table 1 and Figure 3, and changed the N comment to match the table. Claude also removed the setup paragraph earlier at my request. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q3a | I wrote the answer and explanation. Claude checked the arithmetic and transition values against the handout, counted the words, and typeset it into `report/main.tex` as written. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q3b | I wrote the matrix and explanation. Claude checked each entry against the handout, counted the words, and typeset it into `report/main.tex` as written. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q3c | I wrote the derivation. Claude checked it with a throwaway exact-fraction and eigenvector calculation (not in this repo) and typeset it into `report/main.tex` as written. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q3d | I wrote the matrix and explanation. Claude checked each entry against the handout, counted the words, and typeset it into `report/main.tex` as written. | Session 50aefb99 |
+| 2026-11-09 | Claude Code | Q3e | I wrote the filter derivation and example. Claude checked the formulas and example with a throwaway calculation (not in this repo) and typeset it into `report/main.tex` as written. | Session 50aefb99 |
 
 **Transcript:** "Session 50aefb99" is Claude Code session `50aefb99-4011-4854-99e8-9e4363846115`, stored locally at
 `C:\Users\arjun\.claude\projects\c--Codes-mte-544-a2\50aefb99-4011-4854-99e8-9e4363846115.jsonl`.

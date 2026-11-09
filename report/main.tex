@@ -210,19 +210,99 @@ Table~\ref{tab:q2c} summarises ten seeds per setting, and Figure~\ref{fig:q2c} s
 \section{Bayesian Filter for Tracking Moo-Deng's Behavior I (32 pts)}
 
 \subsection*{3(a) Probability of sequence (2,3,3,1) [4 pts] \quad (max 50 words)}
-% TODO
+
+\begin{equation*}
+    P = p(2|1) \cdot p(3|2) \cdot p(3|3) \cdot p(1|3) = 0.4 \times 0.4 \times 0.7 \times 0.2 = 0.0224 \ (2.24\%)
+\end{equation*}
+By the Markov property, each move depends only on the current zone, so the probability of the whole path is the product of the one-step transition probabilities: Feeding$\to$Resting (0.4), Resting$\to$Playground (0.4), Playground$\to$Playground (0.7), Playground$\to$Feeding (0.2).
 
 \subsection*{3(b) Transition matrix $\mat{A}$ [5 pts] \quad (max 50 words)}
-% TODO
+
+\begin{equation*}
+    \mat{A} = \begin{bmatrix} 0.6 & 0.2 & 0.2 \\ 0.4 & 0.4 & 0.1 \\ 0.0 & 0.4 & 0.7 \end{bmatrix}
+    \qquad \text{(columns: from F, R, P; rows: to F, R, P)}
+\end{equation*}
+Since $\vect{x}_{k+1} = \mat{A}\vect{x}_k$, entry $\mat{A}_{ij} = p(A_{k+1} = i \mid A_k = j)$, so column $j$ lists where Moo-Deng goes from zone $j$. Each column comes from one behaviour bullet and sums to 1. $\mat{A}_{31} = 0$ because she never moves from Feeding directly to Playground.
 
 \subsection*{3(c) Stationary probabilities [8 pts]}
-% TODO
+
+A stationary distribution does not change under a transition, so $\vect{x}^* = \mat{A}\vect{x}^*$, which is equivalent to $(\mat{A} - \mat{I})\vect{x}^* = \vect{0}$, together with $x_1 + x_2 + x_3 = 1$.
+\begin{equation*}
+    \mat{A} - \mat{I} = \begin{bmatrix} -0.4 & 0.2 & 0.2 \\ 0.4 & -0.6 & 0.1 \\ 0.0 & 0.4 & -0.3 \end{bmatrix}
+\end{equation*}
+The three rows of $(\mat{A} - \mat{I})$ sum to zero, so only two of the equations are independent. The normalisation $x_1 + x_2 + x_3 = 1$ supplies the third.
+
+\begin{itemize}
+    \item Row 1: $-0.4x_1 + 0.2x_2 + 0.2x_3 = 0$, which gives $2x_1 = x_2 + x_3$.
+    \item Substitute $x_2 + x_3 = 1 - x_1$: $2x_1 = 1 - x_1$, so $x_1 = 1/3$.
+    \item Row 2: $0.4x_1 - 0.6x_2 + 0.1x_3 = 0$. With $x_1 = 1/3$: $4/3 - 6x_2 + x_3 = 0$, so $x_3 = 6x_2 - 4/3$.
+    \item Substitute into $x_2 + x_3 = 2/3$: $7x_2 - 4/3 = 2/3$, so $x_2 = 2/7$.
+    \item $x_3 = 6(2/7) - 4/3 = 8/21$.
+\end{itemize}
+\begin{equation*}
+    \vect{x}^* = \begin{bmatrix} 1/3 \\ 2/7 \\ 8/21 \end{bmatrix} = \begin{bmatrix} 7/21 \\ 6/21 \\ 8/21 \end{bmatrix} \approx \begin{bmatrix} 0.333 \\ 0.286 \\ 0.381 \end{bmatrix}
+\end{equation*}
+
+Check with row 3: $0.4(2/7) - 0.3(8/21) = 8/70 - 8/70 = 0$ $\checkmark$. Equivalently, $\vect{x}^*$ is the eigenvector of $\mat{A}$ for eigenvalue 1, normalised to sum to 1. $\mat{A}^{100}[1, 0, 0]^\top$ gives the same values, so the long-run result does not depend on the starting zone.
+
+Over the long run, Moo-Deng spends about 33\% of her time feeding, 29\% resting and 38\% in the playground.
 
 \subsection*{3(d) Measurement matrix $\mat{C}$ [5 pts] \quad (max 50 words)}
-% TODO
+
+\begin{equation*}
+    \mat{C} = \begin{bmatrix} 0.80 & 0.20 & 0.05 \\ 0.10 & 0.70 & 0.10 \\ 0.10 & 0.10 & 0.85 \end{bmatrix}
+    \qquad \text{(columns: true zone F, R, P; rows: displays F, R, P)}
+\end{equation*}
+Since $[p(\vect{y} = \vect{e}_1),\ p(\vect{y} = \vect{e}_2),\ p(\vect{y} = \vect{e}_3)]^\top = \mat{C}\vect{x}_k$, entry $\mat{C}_{ij} = p(\text{display } i \mid \text{true zone } j)$. Column $j$ is the sensor bullet for zone $j$, and each column sums to 1. The diagonal holds the accuracies; the off-diagonal entries are the misreadings.
 
 \subsection*{3(e) Bayesian filter state estimator [10 pts]}
-% TODO
+
+This applies the general Bayes filter (Localization III, slide 59) to 3 discrete states with no control input.
+
+\textbf{Prediction step.} By total probability and the Markov property:
+\begin{equation*}
+    \bar{x}_k(i) = \sum_j p(A_k = i \mid A_{k-1} = j)\, x_{k-1}(j) \quad\Longrightarrow\quad \bar{\vect{x}}_k = \mat{A}\vect{x}_{k-1}
+\end{equation*}
+
+\textbf{Correction step.} By Bayes' rule, with the measurement depending only on the current state:
+\begin{equation*}
+    x_k(i) = \eta \cdot p(\vect{y}_k \mid A_k = i) \cdot \bar{x}_k(i)
+\end{equation*}
+For the reading $\vect{y}_k$ actually received, $p(\vect{y}_k \mid A_k = i)$ for $i = 1, 2, 3$ is the row of $\mat{C}$ picked out by $\vect{y}_k$, which is the vector $\mat{C}^\top\vect{y}_k$. In matrix form:
+\begin{equation*}
+    \vect{x}_k = \eta \cdot \operatorname{diag}(\mat{C}^\top\vect{y}_k)\, \mat{A}\vect{x}_{k-1}, \qquad \eta = \frac{1}{\vect{y}_k^\top\mat{C}\mat{A}\vect{x}_{k-1}} = \frac{1}{\sum_i [\operatorname{diag}(\mat{C}^\top\vect{y}_k)\,\mat{A}\vect{x}_{k-1}]_i}
+\end{equation*}
+$\eta$ normalises $\vect{x}_k$ so that it sums to 1. Its denominator is $p(\vect{y}_k \mid \vect{y}_{1:k-1})$, the predicted probability of the reading.
+
+\textbf{State estimate.} Take the most likely zone: $\hat{A}_k = \arg\max_i x_k(i)$.
+
+\textbf{With numbers.} The likelihood vector $\mat{C}^\top\vect{y}_k$ for each possible reading is:
+\begin{center}
+\begin{tabular}{ll}
+    \toprule
+    Reading $\vect{y}_k$ & $\mat{C}^\top\vect{y}_k$ \\
+    \midrule
+    Feeding $[1, 0, 0]^\top$ & $[0.80, 0.20, 0.05]^\top$ \\
+    Resting $[0, 1, 0]^\top$ & $[0.10, 0.70, 0.10]^\top$ \\
+    Playground $[0, 0, 1]^\top$ & $[0.10, 0.10, 0.85]^\top$ \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Example.} Take $\vect{x}_{k-1} = [1, 0, 0]^\top$ (known to be Feeding) and a Feeding reading.
+\begin{itemize}
+    \item Prediction: $\bar{\vect{x}}_k = \mat{A}\vect{x}_{k-1} = [0.6, 0.4, 0]^\top$.
+    \item Multiply by the likelihood $[0.80, 0.20, 0.05]^\top$ element-wise: $[0.48, 0.08, 0]^\top$. The sum is 0.56, so $\eta = 1/0.56$.
+    \item Normalise: $\vect{x}_k = [0.857, 0.143, 0]^\top$, so $\hat{A}_k = 1$ (Feeding).
+\end{itemize}
+
+\textbf{Algorithm} (one step per observation):
+\begin{enumerate}
+    \item Predict: $\bar{\vect{x}}_k = \mat{A}\vect{x}_{k-1}$
+    \item Update: $\tilde{\vect{x}}_k = (\mat{C}^\top\vect{y}_k) \odot \bar{\vect{x}}_k$ ($\odot$ = element-wise product)
+    \item Normalise: $\vect{x}_k = \tilde{\vect{x}}_k / (\vect{1}^\top\tilde{\vect{x}}_k)$
+    \item Estimate: $\hat{A}_k = \arg\max \vect{x}_k$
+\end{enumerate}
 
 % =====================================================================
 \clearpage
