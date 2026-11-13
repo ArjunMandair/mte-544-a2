@@ -180,55 +180,44 @@ Figures~\ref{fig:q2c_N}--\ref{fig:q2c_t} vary each parameter alone from the base
 
 \textbf{Threshold $\varepsilon$:} small $\varepsilon$ rejects noisy true points, giving few inliers and an unstable fit. Large $\varepsilon$ accepts outliers, inflating the inlier count and biasing the ellipse. $\varepsilon \approx 0.2$ balanced both.
 
-% Template plots are saved with a wide white border, so trim it (values in bp)
-\newcommand{\qtwoplot}[1]{\includegraphics[width=\linewidth, trim=166 36 180 58, clip]{#1}}
+% Template plots are stacked one above the other so they stay large
+\newcommand{\qtwoplot}[2]{%
+    \begin{subfigure}{0.8\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{#1}
+        \caption{#2}
+    \end{subfigure}}
 
-\begin{figure}[h!]
+\begin{figure}[p]
     \centering
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_N_50.png}
-        \caption{$N = 50$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_N_500.png}
-        \caption{$N = 500$ (base case)}
-    \end{subfigure}
-    \par\medskip
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_N_5000.png}
-        \caption{$N = 5000$}
-    \end{subfigure}
-    \caption{Effect of the number of points $N$, with 1000 iterations and $\varepsilon = 0.2$. Each panel is one run of the template's main block. Purple points are inliers, red points are the raw measurements, and the red dot is the centre $\vect{b}$. Axes are unitless.}
+    \qtwoplot{q2c_N_50.png}{$N = 50$}
+    \par\bigskip
+    \qtwoplot{q2c_N_500.png}{$N = 500$ (base case)}
+    \caption{Effect of the number of points $N$, with 1000 iterations and $\varepsilon = 0.2$ (continued on the next page). Each panel is one run of the template's main block. Purple points are inliers, red points are the raw measurements, and the red dot is the centre $\vect{b}$. Axes are unitless.}
     \label{fig:q2c_N}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[p]
+    \ContinuedFloat
     \centering
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_iterations_10.png}
-        \caption{10 iterations}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_iterations_5000.png}
-        \caption{5000 iterations}
-    \end{subfigure}
+    \qtwoplot{q2c_N_5000.png}{$N = 5000$}
+    \caption[]{Effect of the number of points $N$ (continued).}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \qtwoplot{q2c_iterations_10.png}{10 iterations}
+    \par\bigskip
+    \qtwoplot{q2c_iterations_5000.png}{5000 iterations}
     \caption{Effect of the number of iterations, with $N = 500$ and $\varepsilon = 0.2$. The base case is Figure~\ref{fig:q2c_N}(b). Colours are as in Figure~\ref{fig:q2c_N}, and axes are unitless.}
     \label{fig:q2c_i}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[p]
     \centering
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_threshold_0p02.png}
-        \caption{$\varepsilon = 0.02$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.49\linewidth}
-        \qtwoplot{q2c_threshold_1p0.png}
-        \caption{$\varepsilon = 1.0$}
-    \end{subfigure}
+    \qtwoplot{q2c_threshold_0p02.png}{$\varepsilon = 0.02$}
+    \par\bigskip
+    \qtwoplot{q2c_threshold_1p0.png}{$\varepsilon = 1.0$}
     \caption{Effect of the threshold $\varepsilon$, with $N = 500$ and 1000 iterations. The base case is Figure~\ref{fig:q2c_N}(b). Colours are as in Figure~\ref{fig:q2c_N}, and axes are unitless.}
     \label{fig:q2c_t}
 \end{figure}
