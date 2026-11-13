@@ -119,7 +119,8 @@ if __name__ == "__main__":
     dataset = all_data[np.random.choice(all_data.shape[0], N, replace=False), :]
     # dataset is p
     
-    Q, b_est, inliers = ransac_ellipse(dataset)
+    # NOTE I EDIT THIS FOR THE REPORT, YOU CAN CHANGE IT BACK TO 1000 OR WHATEVER YOU WANT
+    Q, b_est, inliers = ransac_ellipse(dataset, num_iterations=1000, threshold=0.2)
     
     # Plot the raw measurements and fitted ellipse
     fig, ax1 = plt.subplots(1, 1, figsize=(16, 8))
