@@ -40,8 +40,15 @@ files in this folder and link them here).
 | 2026-11-09 | Claude Code | Q3e | I wrote the filter derivation and example. Claude checked the formulas and example with a throwaway calculation (not in this repo) and typeset it into `report/main.tex` as written. | Session 50aefb99 |
 | 2026-11-09 | Claude Code | Q4 | Claude ran my Q4 script and checked it with throwaway scripts (not in this repo): sampling frequencies against A and C, a separate filter recursion, and accuracy over many runs. At my request, Claude wrote the 4(b) sentence and the 4(c) text and results table from a run (seed 0 set from outside the script) in `report/main.tex`, with a TODO for my 4(a) explanation. | Session 50aefb99 |
 | 2026-11-09 | Claude Code | Q4a | I wrote the 4(a) explanation. Claude counted the words, tested the long-run frequency claim with a throwaway run (not in this repo), and typeset it into `report/main.tex` as written. | Session 50aefb99 |
+| 2026-11-13 | Claude Code | Q1, Q2 code | Claude explained my Q1 script and my `ransac_ellipse`. At my request, Claude removed my bounding-box filter from `ransac_ellipse` to test it. Every seed then returned a huge ellipse with 100% inliers, so I reverted the change myself. | Session 995aad48 |
+| 2026-11-13 | Claude Code | Report formatting | At my request, Claude removed the due date, the point values and word limits from the headings, and the subheading descriptions. Claude changed labels from 1(a) to 1a, removed colons from explanatory sentences, rewrote the two 1a bullets as full sentences, and removed "(next case)" and "(maximum consensus)". | Session 995aad48 |
+| 2026-11-13 | Claude Code | Q2 figures | At my request, Claude deleted the helper `MTE_544_AS2_Q2_figure_ArjunMandair.py` and its figure, removed the extremes figure from the 2c sweep helper (keeping the table), and updated the 2b caption and 2c text. I save the 2b figure myself from the unmodified template's main block. | Session 995aad48 |
+| 2026-11-13 | Claude Code | Q2c | At my request, Claude deleted the sweep helper `MTE_544_AS2_Q2_sweep_ArjunMandair.py` and its results table, and removed the table and its intro sentence from 2c. I base 2c on my own runs of the template's main block. | Session 995aad48 |
+| 2026-11-13 | Claude Code | Q2c | I made and saved seven plots from the template's main block. At my request, Claude renamed them (`q2c_N_*`, `q2c_iterations_*`, `q2c_threshold_*`), added them to 2c as three figures with captions, trimmed their white borders in LaTeX, and pointed the opening sentence of 2c at them. | Session 995aad48 |
 
 **Transcript:** "Session 50aefb99" is Claude Code session `50aefb99-4011-4854-99e8-9e4363846115`, stored locally at
 `C:\Users\arjun\.claude\projects\c--Codes-mte-544-a2\50aefb99-4011-4854-99e8-9e4363846115.jsonl`.
+"Session 995aad48" is Claude Code session `995aad48-fdea-417b-a6c7-bbda13c34e24`, stored locally at
+`C:\Users\arjun\.claude\projects\c--Codes-mte-544-a2\995aad48-fdea-417b-a6c7-bbda13c34e24.jsonl`.
 
 **Policy status:** use of GenAI on the analytical parts (Q1a) has not been confirmed with the instructor or TA.

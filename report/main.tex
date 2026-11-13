@@ -37,7 +37,7 @@
 
 \title{MTE 544 -- Autonomous Mobile Robots\\Assignment 2}
 \author{Arjun Mandair \\ Student ID: \texttt{21028006}}
-\date{Due November 13, 2026}
+\date{}
 
 \begin{document}
 \maketitle
@@ -45,17 +45,17 @@
 
 % =====================================================================
 \clearpage
-\section{RANSAC with Ellipse I (18 pts)}
+\section{RANSAC with Ellipse I}
 
-\subsection*{1(a) Minimum number of points and construction method [10 pts]}
+\subsection*{1a}
 
 The ellipse is written as
 \begin{equation*}
     Ax^2 + 2Bxy + Cy^2 - 2Dx - 2Ey + 1 = 0.
 \end{equation*}
-A conic has 6 coefficients but only 5 degrees of freedom, because multiplying the whole equation by any nonzero number gives the same curve. Fixing the constant term at 1 removes that scaling, which leaves 5 unknowns, $\bm{\theta} = [A, B, C, D, E]^\top$. The matrix form gives the same count: $\mat{Q}$ is symmetric, so it has 3 independent entries, and $\vect{b}$ has 2, for 5 in total.
+A conic has 6 coefficients but only 5 degrees of freedom, because multiplying the whole equation by any nonzero number gives the same curve. Fixing the constant term at 1 removes that scaling, which leaves 5 unknowns, $\bm{\theta} = [A, B, C, D, E]^\top$. The matrix form gives the same count. $\mat{Q}$ is symmetric, so it has 3 independent entries, and $\vect{b}$ has 2, for 5 in total.
 
-Substituting a data point $\vect{p}_i = (x_i, y_i)$ turns every $x$ and $y$ into a known number. Moving the 1 to the right-hand side then gives one equation that is linear in $\bm{\theta}$:
+Substituting a data point $\vect{p}_i = (x_i, y_i)$ turns every $x$ and $y$ into a known number. Moving the 1 to the right-hand side then gives one equation that is linear in $\bm{\theta}$.
 \begin{equation*}
     x_i^2\,A + 2x_iy_i\,B + y_i^2\,C - 2x_i\,D - 2y_i\,E = -1.
 \end{equation*}
@@ -65,10 +65,7 @@ Five points give five such equations. Stacking them gives
 \end{equation*}
 where row $i$ of $\mat{M}$ is $[x_i^2,\ 2x_iy_i,\ y_i^2,\ -2x_i,\ -2y_i]$.
 
-\begin{itemize}
-    \item \textbf{Fewer than 5 points:} the system is underdetermined, so it has infinitely many solutions (conics), or none.
-    \item \textbf{Exactly 5 points:} this is the minimum. There is a unique solution $\bm{\theta} = \mat{M}^{-1}(-\vect{1})$ whenever $\mat{M}$ is invertible (rank 5).
-\end{itemize}
+With fewer than 5 points, the system has fewer equations than unknowns, so it is underdetermined and has either infinitely many solutions (conics) or none. With exactly 5 points, the number of equations matches the number of unknowns, so 5 is the minimum needed. In that case there is a unique solution $\bm{\theta} = \mat{M}^{-1}(-\vect{1})$ whenever $\mat{M}$ is invertible (rank 5).
 
 Solving in polynomial form is useful because the unknowns appear linearly, so fitting reduces to solving a linear system. The $(\mat{Q}, \vect{b})$ form is easier to interpret ($\vect{b}$ is the centre, $\mat{Q}$ sets the size and orientation), but it isn't linear in its unknowns.
 
@@ -84,15 +81,15 @@ Solving in polynomial form is useful because the unknowns appear linearly, so fi
 \begin{itemize}
     \item \textbf{The ellipse does not pass through the origin.} Fixing the constant at 1 requires the true constant to be nonzero. A conic through $(0, 0)$ has a constant term of 0, so it cannot be scaled to 1. In that case $\mat{M}$ is singular (rank 4) and the method fails.
     \item \textbf{No 4 of the 5 points are collinear.} Four points on one line make $\mat{M}$ singular, because infinitely many line-pair conics fit them.
-    \item 3 collinear points (with no 4 collinear) still leave $\mat{M}$ invertible, but the unique solution is a degenerate pair of lines. A degenerate conic satisfies $\det(\mat{N})\,(1 - \vect{d}^\top\mat{N}^{-1}\vect{d}) = 0$, so for intersecting lines ($\mat{N}$ invertible) $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$ and $\alpha$ is undefined: the sample is rejected at step 3. For parallel lines, $\mat{N}$ is singular (next case).
-    \item $\mat{N}$ is singular (the parabola case, $AC - B^2 = 0$): $\mat{N}^{-1}$ does not exist, so reject the sample.
-    \item $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$: $\alpha$ is undefined (division by zero), so reject the sample.
+    \item 3 collinear points (with no 4 collinear) still leave $\mat{M}$ invertible, but the unique solution is a degenerate pair of lines. A degenerate conic satisfies $\det(\mat{N})\,(1 - \vect{d}^\top\mat{N}^{-1}\vect{d}) = 0$, so for intersecting lines ($\mat{N}$ invertible) $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$ and $\alpha$ is undefined, so the sample is rejected at step 3. For parallel lines, $\mat{N}$ is singular.
+    \item If $\mat{N}$ is singular (the parabola case, $AC - B^2 = 0$), $\mat{N}^{-1}$ does not exist, so reject the sample.
+    \item If $\vect{d}^\top\mat{N}^{-1}\vect{d} = 1$, $\alpha$ is undefined (division by zero), so reject the sample.
 \end{itemize}
 The checks in the last two bullets run before step 4, so they need their own guards. In code, \texttt{fit\_ellipse\_subset} raises \texttt{LinAlgError} for these cases, and \texttt{ransac\_ellipse} catches it and skips that sample.
 
-\subsection*{1(b) Ellipse fit to the given dataset [8 pts]}
+\subsection*{1b}
 
-The method from 1(a) was applied in Python (\texttt{MTE\_544\_AS2\_Q1\_ArjunMandair.py}) to the points
+The method from 1a was applied in Python (\texttt{MTE\_544\_AS2\_Q1\_ArjunMandair.py}) to the points
 \begin{equation*}
     (2.92, -6.01), \quad (3.40, -7.20), \quad (4.99, -7.84), \quad (5.48, -7.04), \quad (4.20, -5.91).
 \end{equation*}
@@ -132,21 +129,21 @@ The eigenvalues of $\mat{Q}$ are $0.44217849$ and $1.56737653$. Both are positiv
 
 % =====================================================================
 \clearpage
-\section{RANSAC with Ellipse II (30 pts)}
+\section{RANSAC with Ellipse II}
 
-\subsection*{2(a) \texttt{fit\_ellipse\_subset} [8 pts]}
+\subsection*{2a}
 
-The Q2 script implements \texttt{fit\_ellipse\_subset} using the 5-point method from 1(a). Applied to the five points from 1(b), it gives
+The Q2 script implements \texttt{fit\_ellipse\_subset} using the 5-point method from 1a. Applied to the five points from 1b, it gives
 \begin{equation*}
     \mat{Q} = \begin{bmatrix} 0.75282437 & 0.50302811 \\ 0.50302811 & 1.25673065 \end{bmatrix},
     \qquad
     \vect{b} = \begin{bmatrix} 4.19868909 \\ -6.80150371 \end{bmatrix},
 \end{equation*}
-which matches 1(b), and all five points give $(\vect{p}_i - \vect{b})^\top\mat{Q}(\vect{p}_i - \vect{b}) = 1$.
+which matches 1b, and all five points give $(\vect{p}_i - \vect{b})^\top\mat{Q}(\vect{p}_i - \vect{b}) = 1$.
 
-\subsection*{2(b) \texttt{ransac\_ellipse} [12 pts] \quad (max 150 words)}
+\subsection*{2b}
 
-For \texttt{num\_iterations} rounds:
+Repeat for \texttt{num\_iterations} rounds.
 \begin{enumerate}
     \item Sample 5 distinct random points, the minimum that defines an ellipse (Q1a).
     \item Fit $\mat{Q}$ and $\vect{b}$ with \texttt{fit\_ellipse\_subset}. If $\mat{M}$ or $\mat{N}$ is singular or $\alpha$ is undefined, the fit raises an error and the sample is skipped.
@@ -155,10 +152,10 @@ For \texttt{num\_iterations} rounds:
     \item Mark point $\vect{p}_i$ as an inlier if $\left|\sqrt{(\vect{p}_i - \vect{b})^\top\mat{Q}(\vect{p}_i - \vect{b})} - 1\right| \leq \varepsilon$.
     \item If this model has more inliers than the best so far, store its $\mat{Q}$, $\vect{b}$ and inliers.
 \end{enumerate}
-Return the model with the most inliers (maximum consensus).
+Return the model with the most inliers.
 
 \subsubsection*{Result}
-One run with the template's default settings ($N = 500$ points, 1000 iterations, $\varepsilon = 0.2$, random seed 0) gave 374 inliers out of 500 (74.8\%), with
+One run of \texttt{ransac\_ellipse} with the template's default settings ($N = 500$ points, 1000 iterations, $\varepsilon = 0.2$, random seed 0) gave 374 inliers out of 500 (74.8\%), with
 \begin{equation*}
     \mat{Q} = \begin{bmatrix} 0.00512310 & -0.00252617 \\ -0.00252617 & 0.01378752 \end{bmatrix},
     \qquad
@@ -168,35 +165,73 @@ The eigenvalues of $\mat{Q}$ are $0.00444037$ and $0.01447024$, so $\mat{Q}$ is 
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\linewidth]{q2_ransac_ellipse.png}
-    \caption{RANSAC result for $N = 500$ points, 1000 iterations and $\varepsilon = 0.2$ (seed 0), showing the inliers, outliers, fitted ellipse, inlier band and centre $\vect{b}$. Axes are unitless. The ellipse is drawn directly from the fitted $\mat{Q}$ and $\vect{b}$ by a separate helper script.}
+    \includegraphics[width=\linewidth]{q2_ransac_ellipse.png}
+    \caption{Plot produced by the template's main block ($N = 500$ points, 1000 iterations, $\varepsilon = 0.2$). Purple points are inliers, red points are the raw measurements, and the red dot is the centre $\vect{b}$. The template sets no random seed, so this run differs slightly from the seed-0 values above. Axes are unitless.}
     \label{fig:q2b}
 \end{figure}
 
-\subsection*{2(c) Effect of dataset size, iterations and threshold [10 pts] \quad (max 100 words)}
+\subsection*{2c}
 
-\begin{table}[h!]
-    \centering
-    \footnotesize
-    \input{q2c_table.tex}
-    \caption{Results for each setting over 10 seeds, as mean $\pm$ standard deviation across the runs that returned a model. ``Runs'' is the number of seeds that returned a model. $b_x$ and $b_y$ are the components of the centre, ``Major'' and ``Minor'' are the semi-axes, and all are unitless.}
-    \label{tab:q2c}
-\end{table}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\linewidth]{q2c_extremes.png}
-    \caption{Fitted ellipse at the smallest and largest value of each setting (seed 0), with the other two settings at their baseline values. Axes are unitless.}
-    \label{fig:q2c}
-\end{figure}
-
-Table~\ref{tab:q2c} summarises ten seeds per setting, and Figure~\ref{fig:q2c} shows each setting's extremes, with the others at baseline.
+Figures~\ref{fig:q2c_N}--\ref{fig:q2c_t} vary each parameter alone from the base case ($N = 500$, 1000 iterations, $\varepsilon = 0.2$).
 
 \textbf{Points ($N$):} the inlier percentage stays roughly steady, and the centre stabilises up to $N = 500$; beyond that, gains are small while runtime grows.
 
-\textbf{Iterations:} too few often miss an all-inlier sample, so fits vary between seeds. Beyond about 1000, results stop improving and only runtime grows.
+\textbf{Iterations:} too few often miss an all-inlier sample, so fits vary between runs. Beyond about 1000, results stop improving and only runtime grows.
 
 \textbf{Threshold $\varepsilon$:} small $\varepsilon$ rejects noisy true points, giving few inliers and an unstable fit. Large $\varepsilon$ accepts outliers, inflating the inlier count and biasing the ellipse. $\varepsilon \approx 0.2$ balanced both.
+
+% Template plots are saved with a wide white border, so trim it (values in bp)
+\newcommand{\qtwoplot}[1]{\includegraphics[width=\linewidth, trim=166 36 180 58, clip]{#1}}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_N_50.png}
+        \caption{$N = 50$}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_N_500.png}
+        \caption{$N = 500$ (base case)}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_N_5000.png}
+        \caption{$N = 5000$}
+    \end{subfigure}
+    \caption{Effect of the number of points $N$, with 1000 iterations and $\varepsilon = 0.2$. Each panel is one run of the template's main block. Purple points are inliers, red points are the raw measurements, and the red dot is the centre $\vect{b}$. Axes are unitless.}
+    \label{fig:q2c_N}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_iterations_10.png}
+        \caption{10 iterations}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_iterations_5000.png}
+        \caption{5000 iterations}
+    \end{subfigure}
+    \caption{Effect of the number of iterations, with $N = 500$ and $\varepsilon = 0.2$. The base case is Figure~\ref{fig:q2c_N}(b). Colours are as in Figure~\ref{fig:q2c_N}, and axes are unitless.}
+    \label{fig:q2c_i}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_threshold_0p02.png}
+        \caption{$\varepsilon = 0.02$}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \qtwoplot{q2c_threshold_1p0.png}
+        \caption{$\varepsilon = 1.0$}
+    \end{subfigure}
+    \caption{Effect of the threshold $\varepsilon$, with $N = 500$ and 1000 iterations. The base case is Figure~\ref{fig:q2c_N}(b). Colours are as in Figure~\ref{fig:q2c_N}, and axes are unitless.}
+    \label{fig:q2c_t}
+\end{figure}
 
 % \begin{figure}[h]
 %   \centering
@@ -207,16 +242,16 @@ Table~\ref{tab:q2c} summarises ten seeds per setting, and Figure~\ref{fig:q2c} s
 
 % =====================================================================
 \clearpage
-\section{Bayesian Filter for Tracking Moo-Deng's Behavior I (32 pts)}
+\section{Bayesian Filter for Tracking Moo-Deng's Behavior I}
 
-\subsection*{3(a) Probability of sequence (2,3,3,1) [4 pts] \quad (max 50 words)}
+\subsection*{3a}
 
 \begin{equation*}
     P = p(2|1) \cdot p(3|2) \cdot p(3|3) \cdot p(1|3) = 0.4 \times 0.4 \times 0.7 \times 0.2 = 0.0224 \ (2.24\%)
 \end{equation*}
-By the Markov property, each move depends only on the current zone, so the probability of the whole path is the product of the one-step transition probabilities: Feeding$\to$Resting (0.4), Resting$\to$Playground (0.4), Playground$\to$Playground (0.7), Playground$\to$Feeding (0.2).
+By the Markov property, each move depends only on the current zone, so the probability of the whole path is the product of the one-step transition probabilities Feeding$\to$Resting (0.4), Resting$\to$Playground (0.4), Playground$\to$Playground (0.7) and Playground$\to$Feeding (0.2).
 
-\subsection*{3(b) Transition matrix $\mat{A}$ [5 pts] \quad (max 50 words)}
+\subsection*{3b}
 
 \begin{equation*}
     \mat{A} = \begin{bmatrix} 0.6 & 0.2 & 0.2 \\ 0.4 & 0.4 & 0.1 \\ 0.0 & 0.4 & 0.7 \end{bmatrix}
@@ -224,7 +259,7 @@ By the Markov property, each move depends only on the current zone, so the proba
 \end{equation*}
 Since $\vect{x}_{k+1} = \mat{A}\vect{x}_k$, entry $\mat{A}_{ij} = p(A_{k+1} = i \mid A_k = j)$, so column $j$ lists where Moo-Deng goes from zone $j$. Each column comes from one behaviour bullet and sums to 1. $\mat{A}_{31} = 0$ because she never moves from Feeding directly to Playground.
 
-\subsection*{3(c) Stationary probabilities [8 pts]}
+\subsection*{3c}
 
 A stationary distribution does not change under a transition, so $\vect{x}^* = \mat{A}\vect{x}^*$, which is equivalent to $(\mat{A} - \mat{I})\vect{x}^* = \vect{0}$, together with $x_1 + x_2 + x_3 = 1$.
 \begin{equation*}
@@ -233,21 +268,21 @@ A stationary distribution does not change under a transition, so $\vect{x}^* = \
 The three rows of $(\mat{A} - \mat{I})$ sum to zero, so only two of the equations are independent. The normalisation $x_1 + x_2 + x_3 = 1$ supplies the third.
 
 \begin{itemize}
-    \item Row 1: $-0.4x_1 + 0.2x_2 + 0.2x_3 = 0$, which gives $2x_1 = x_2 + x_3$.
-    \item Substitute $x_2 + x_3 = 1 - x_1$: $2x_1 = 1 - x_1$, so $x_1 = 1/3$.
-    \item Row 2: $0.4x_1 - 0.6x_2 + 0.1x_3 = 0$. With $x_1 = 1/3$: $4/3 - 6x_2 + x_3 = 0$, so $x_3 = 6x_2 - 4/3$.
-    \item Substitute into $x_2 + x_3 = 2/3$: $7x_2 - 4/3 = 2/3$, so $x_2 = 2/7$.
+    \item Row 1 gives $-0.4x_1 + 0.2x_2 + 0.2x_3 = 0$, so $2x_1 = x_2 + x_3$.
+    \item Substituting $x_2 + x_3 = 1 - x_1$ gives $2x_1 = 1 - x_1$, so $x_1 = 1/3$.
+    \item Row 2 gives $0.4x_1 - 0.6x_2 + 0.1x_3 = 0$. With $x_1 = 1/3$, this becomes $4/3 - 6x_2 + x_3 = 0$, so $x_3 = 6x_2 - 4/3$.
+    \item Substituting into $x_2 + x_3 = 2/3$ gives $7x_2 - 4/3 = 2/3$, so $x_2 = 2/7$.
     \item $x_3 = 6(2/7) - 4/3 = 8/21$.
 \end{itemize}
 \begin{equation*}
     \vect{x}^* = \begin{bmatrix} 1/3 \\ 2/7 \\ 8/21 \end{bmatrix} = \begin{bmatrix} 7/21 \\ 6/21 \\ 8/21 \end{bmatrix} \approx \begin{bmatrix} 0.333 \\ 0.286 \\ 0.381 \end{bmatrix}
 \end{equation*}
 
-Check with row 3: $0.4(2/7) - 0.3(8/21) = 8/70 - 8/70 = 0$ $\checkmark$. Equivalently, $\vect{x}^*$ is the eigenvector of $\mat{A}$ for eigenvalue 1, normalised to sum to 1. $\mat{A}^{100}[1, 0, 0]^\top$ gives the same values, so the long-run result does not depend on the starting zone.
+Row 3 checks out, since $0.4(2/7) - 0.3(8/21) = 8/70 - 8/70 = 0$ $\checkmark$. Equivalently, $\vect{x}^*$ is the eigenvector of $\mat{A}$ for eigenvalue 1, normalised to sum to 1. $\mat{A}^{100}[1, 0, 0]^\top$ gives the same values, so the long-run result does not depend on the starting zone.
 
 Over the long run, Moo-Deng spends about 33\% of her time feeding, 29\% resting and 38\% in the playground.
 
-\subsection*{3(d) Measurement matrix $\mat{C}$ [5 pts] \quad (max 50 words)}
+\subsection*{3d}
 
 \begin{equation*}
     \mat{C} = \begin{bmatrix} 0.80 & 0.20 & 0.05 \\ 0.10 & 0.70 & 0.10 \\ 0.10 & 0.10 & 0.85 \end{bmatrix}
@@ -255,28 +290,28 @@ Over the long run, Moo-Deng spends about 33\% of her time feeding, 29\% resting 
 \end{equation*}
 Since $[p(\vect{y} = \vect{e}_1),\ p(\vect{y} = \vect{e}_2),\ p(\vect{y} = \vect{e}_3)]^\top = \mat{C}\vect{x}_k$, entry $\mat{C}_{ij} = p(\text{display } i \mid \text{true zone } j)$. Column $j$ is the sensor bullet for zone $j$, and each column sums to 1. The diagonal holds the accuracies; the off-diagonal entries are the misreadings.
 
-\subsection*{3(e) Bayesian filter state estimator [10 pts]}
+\subsection*{3e}
 
 This applies the general Bayes filter (Localization III, slide 59) to 3 discrete states with no control input.
 
-\textbf{Prediction step.} By total probability and the Markov property:
+\textbf{Prediction step.} This follows from total probability and the Markov property.
 \begin{equation*}
     \bar{x}_k(i) = \sum_j p(A_k = i \mid A_{k-1} = j)\, x_{k-1}(j) \quad\Longrightarrow\quad \bar{\vect{x}}_k = \mat{A}\vect{x}_{k-1}
 \end{equation*}
 
-\textbf{Correction step.} By Bayes' rule, with the measurement depending only on the current state:
+\textbf{Correction step.} This follows from Bayes' rule, with the measurement depending only on the current state.
 \begin{equation*}
     x_k(i) = \eta \cdot p(\vect{y}_k \mid A_k = i) \cdot \bar{x}_k(i)
 \end{equation*}
-For the reading $\vect{y}_k$ actually received, $p(\vect{y}_k \mid A_k = i)$ for $i = 1, 2, 3$ is the row of $\mat{C}$ picked out by $\vect{y}_k$, which is the vector $\mat{C}^\top\vect{y}_k$. In matrix form:
+For the reading $\vect{y}_k$ actually received, $p(\vect{y}_k \mid A_k = i)$ for $i = 1, 2, 3$ is the row of $\mat{C}$ picked out by $\vect{y}_k$, which is the vector $\mat{C}^\top\vect{y}_k$. In matrix form, this gives
 \begin{equation*}
     \vect{x}_k = \eta \cdot \operatorname{diag}(\mat{C}^\top\vect{y}_k)\, \mat{A}\vect{x}_{k-1}, \qquad \eta = \frac{1}{\vect{y}_k^\top\mat{C}\mat{A}\vect{x}_{k-1}} = \frac{1}{\sum_i [\operatorname{diag}(\mat{C}^\top\vect{y}_k)\,\mat{A}\vect{x}_{k-1}]_i}
 \end{equation*}
 $\eta$ normalises $\vect{x}_k$ so that it sums to 1. Its denominator is $p(\vect{y}_k \mid \vect{y}_{1:k-1})$, the predicted probability of the reading.
 
-\textbf{State estimate.} Take the most likely zone: $\hat{A}_k = \arg\max_i x_k(i)$.
+\textbf{State estimate.} Take the most likely zone, $\hat{A}_k = \arg\max_i x_k(i)$.
 
-\textbf{With numbers.} The likelihood vector $\mat{C}^\top\vect{y}_k$ for each possible reading is:
+\textbf{With numbers.} The likelihood vector $\mat{C}^\top\vect{y}_k$ for each possible reading is shown below.
 \begin{center}
 \begin{tabular}{ll}
     \toprule
@@ -291,9 +326,9 @@ $\eta$ normalises $\vect{x}_k$ so that it sums to 1. Its denominator is $p(\vect
 
 \textbf{Example.} Take $\vect{x}_{k-1} = [1, 0, 0]^\top$ (known to be Feeding) and a Feeding reading.
 \begin{itemize}
-    \item Prediction: $\bar{\vect{x}}_k = \mat{A}\vect{x}_{k-1} = [0.6, 0.4, 0]^\top$.
-    \item Multiply by the likelihood $[0.80, 0.20, 0.05]^\top$ element-wise: $[0.48, 0.08, 0]^\top$. The sum is 0.56, so $\eta = 1/0.56$.
-    \item Normalise: $\vect{x}_k = [0.857, 0.143, 0]^\top$, so $\hat{A}_k = 1$ (Feeding).
+    \item Prediction gives $\bar{\vect{x}}_k = \mat{A}\vect{x}_{k-1} = [0.6, 0.4, 0]^\top$.
+    \item Multiplying element-wise by the likelihood $[0.80, 0.20, 0.05]^\top$ gives $[0.48, 0.08, 0]^\top$. The sum is 0.56, so $\eta = 1/0.56$.
+    \item Normalising gives $\vect{x}_k = [0.857, 0.143, 0]^\top$, so $\hat{A}_k = 1$ (Feeding).
 \end{itemize}
 
 \textbf{Algorithm} (one step per observation):
@@ -306,19 +341,19 @@ $\eta$ normalises $\vect{x}_k$ so that it sums to 1. Its denominator is $p(\vect
 
 % =====================================================================
 \clearpage
-\section{Bayesian Filter for Tracking Moo-Deng's Behavior II (20 pts)}
+\section{Bayesian Filter for Tracking Moo-Deng's Behavior II}
 
-\subsection*{4(a) \texttt{moodeng\_behavior\_update} [6 pts] \quad (max 50 words)}
+\subsection*{4a}
 
-Column (state$-1$) of $\mat{A}$ gives the probabilities of Moo-Deng's next zone, so \texttt{np.random.choice} samples the next state from that distribution. To verify it statistically, one could sample many transitions from each zone and check that the empirical frequencies approach $\mat{A}$, and that long-run visit frequencies approach $\vect{x}^*$ from Q3(c).
+Column (state$-1$) of $\mat{A}$ gives the probabilities of Moo-Deng's next zone, so \texttt{np.random.choice} samples the next state from that distribution. To verify it statistically, one could sample many transitions from each zone and check that the empirical frequencies approach $\mat{A}$, and that long-run visit frequencies approach $\vect{x}^*$ from Q3c.
 
-\subsection*{4(b) \texttt{sensor\_measurement} [6 pts]}
+\subsection*{4b}
 
-\texttt{sensor\_measurement} draws the displayed zone from the column of $\mat{C}$ for the true zone and returns it as a one-hot vector: $(1,0,0)$, $(0,1,0)$ or $(0,0,1)$.
+\texttt{sensor\_measurement} draws the displayed zone from the column of $\mat{C}$ for the true zone and returns it as a one-hot vector, which is $(1,0,0)$, $(0,1,0)$ or $(0,0,1)$.
 
-\subsection*{4(c) \texttt{sim\_moodeng} state estimator [8 pts]}
+\subsection*{4c}
 
-\texttt{sim\_moodeng} applies the algorithm from 3(e) at every step: it predicts with $\mat{A}$, corrects with the likelihood $\mat{C}^\top\vect{y}_k$, normalises, and takes the most likely zone as $\hat{A}_k$. Table~\ref{tab:q4c} shows one run of 20 steps from the template's settings (\texttt{initial\_state=1}, initial belief $[1/3, 1/3, 1/3]^\top$, random seed 0). The estimate matched the true zone at 18 of the 20 steps.
+\texttt{sim\_moodeng} applies the algorithm from 3e at every step. It predicts with $\mat{A}$, corrects with the likelihood $\mat{C}^\top\vect{y}_k$, normalises, and takes the most likely zone as $\hat{A}_k$. Table~\ref{tab:q4c} shows one run of 20 steps from the template's settings (\texttt{initial\_state=1}, initial belief $[1/3, 1/3, 1/3]^\top$, random seed 0). The estimate matched the true zone at 18 of the 20 steps.
 
 \begin{table}[h!]
     \centering
